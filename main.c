@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
 
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -52,11 +53,15 @@ word w_read (adr a) {
 }
 
 void load_file() {
-    FILE * f = stdin;
+    FILE * f = fopen ("sum.txt", "r");
+    if (f == NULL){
+        perror ("sum.txt");
+        exit (1);
+    };
     unsigned int adress;
     unsigned int n;
     unsigned int val = 0;
-    while(fscanf (f, "%x%x", &adress, &n) == 2) {
+    while (fscanf (f, "%x%x", &adress, &n) == 2){
     //fscanf (f, "%x%x", &adress, &n);
         for(int i = 0; i < n; i++) {
             fscanf (f, "%x", &val);
@@ -72,21 +77,25 @@ void mem_dump(adr start, word n) {
 
 void test_mem() {
     byte b0,b1;
-    word w;
+    word w, w1;
     w = 0x0d0c;
+    w1 = 0x0f0e;
     b0 = 0x0c;
     b1 = 0x0d;
     b_write(4, b0);
     b_write(5, b1);
     w = w_read(4);
     printf ("%04x = %02x%02x\n", w, b1, b0);
-    /*
-    w_write(4, w);
-    b0 = b_read(4);
-    b1 = b_read(5);
-    printf ("%04x = %o2x%02x\n", w, b1, b0);*/
+
     assert(b0 == 0x0c);
     assert(b1 == 0x0d);
+    assert (mem[4] == 0x0c);
+    assert (mem[5] == 0x0d);
+    assert (w == 0x0d0c);
+    w_write(6, w);
+    assert (w == 0x0d0c);
+    assert (mem[6] == 0x0c);
+    assert (mem[7] == 0x0d);
 }
 
 int main () {
