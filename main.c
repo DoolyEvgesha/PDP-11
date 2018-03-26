@@ -86,16 +86,18 @@ void test_mem() {
     b_write(5, b1);
     w = w_read(4);
     printf ("%04x = %02x%02x\n", w, b1, b0);
-
+    b0 = b_read (4);
+    b1 = b_read (5);
     assert(b0 == 0x0c);
     assert(b1 == 0x0d);
     assert (mem[4] == 0x0c);
     assert (mem[5] == 0x0d);
     assert (w == 0x0d0c);
     w_write(6, w);
-    assert (w == 0x0d0c);
+    w = w_read (6);
     assert (mem[6] == 0x0c);
     assert (mem[7] == 0x0d);
+    assert (w == 0x0d0c);
 }
 
 int main () {
