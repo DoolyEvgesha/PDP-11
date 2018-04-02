@@ -10,6 +10,25 @@ typedef word adr;
 #define  HI(x) (((x) >> 8) & 0xFF)
 */
 
+void do_halt () {
+    printf("HALT\n");
+    exit(0);
+}
+
+void do_mov () {
+    printf("MOV\n");
+    //write it
+}
+
+void do_add () {
+    printf("ADD\n");
+    //write it
+}
+
+void do_unknown () {
+    printf("UNKNOWN\n");
+    //write it
+}
 
 struct Command {
     word opcode;
@@ -18,27 +37,12 @@ struct Command {
     void (*func)();
 
 }commands[] = {
-        {0,       0177777, "halt", do_halt}, //mask is all "1" or "0xFFFF
-        {0010000, 0170000, "mov",  do_mov},
-        {0060000, 0170000, "add",  do_add},
-        {   ?   ,       ? ,"unknown", do_unknown}//MUST BE THE LAST
+        {0,       0177777, "halt",    do_halt}, //mask is all "1" or "0xFFFF
+        {0010000, 0170000, "mov",     do_mov},
+        {0060000, 0170000, "add",     do_add},
+        {0170000, 0177777, "unknown", do_unknown}//MUST BE THE LAST
 };
 
-void do_halt () {
-    printf("HALT\n");
-}
-
-void do_mov () {
-    printf("MOV\n");
-}
-
-void do_add () {
-    printf("ADD\n");
-}
-
-void do_unknown () {
-    printf("UNKNOWN\n");
-}
 
 
 byte mem[64*1024];
@@ -98,10 +102,11 @@ void run (adr pc0) {
             struct Command cmd = commands[i];
             if ((w & cmd.mask) == *(cmd.name)) {
                 cmd.func;
-                if (i == 0) // if it is halt
-                    exit(0);
+                //if (i == 0) // if it is halt
+                    //exit(0);
             }
         }
+        break;
     }
 }
 
