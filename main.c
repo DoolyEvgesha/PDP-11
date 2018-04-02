@@ -9,20 +9,38 @@ typedef word adr;
 #define  LO(x) ((x) & 0xFF)
 #define  HI(x) (((x) >> 8) & 0xFF)
 */
-/*
 
-byte b_read(adr a) {
-    byte res;
-    if(a%2 == 0) {
-        res = (byte)LO (mem[a]);
-    }
-    else {
-        res = (byte) HI (mem[a-1]);
-        printf ("mem[%d] = %x res =%x HI = %x\n", a, mem[a], res, HI (mem[a]));
-    }
-    return res;
+
+struct Command {
+    word opcode;
+    word mask;
+    char *name;
+    void (*func)();
+
+}commands[] = {
+        {0,       0177777, "halt", do_halt}, //mask is all "1" or "0xFFFF
+        {0010000, 0170000, "mov",  do_mov},
+        {0060000, 0170000, "add",  do_add},
+        {   ?   ,       ? ,"unknown", do_unknown}//MUST BE THE LAST
+};
+
+void do_halt () {
+    printf("HALT\n");
 }
-*/
+
+void do_mov () {
+    printf("MOV\n");
+}
+
+void do_add () {
+    printf("ADD\n");
+}
+
+void do_unknown () {
+    printf("UNKNOWN\n");
+}
+
+
 byte mem[64*1024];
 
 void b_write(adr a, byte val) {
@@ -70,8 +88,25 @@ void load_file() {
     }
 }
 
+void run (adr pc0) {
+    adr pc = pc0;
+    while(1) {
+        word w = w_read(pc);
+        printf("%06o:%06o", pc, w);
+        pc += 2;
+        for(int i = 0; i < 64*1024; i++) {
+            struct Command cmd = commands[i];
+            if ((w & cmd.mask) == *(cmd.name)) {
+                cmd.func;
+                if (i == 0) // if it is halt
+                    exit(0);
+            }
+        }
+    }
+}
+
 void mem_dump(adr start, word n) {
-    for(adr i = 0; i < n; i = i + 2)
+    for(adr i = 0; i < n; i = i + (adr)2)
         printf("%06o : %06o\n", start + i, w_read (start + i));
 }
 
@@ -103,4 +138,5 @@ void test_mem() {
 int main () {
     test_mem ();
     return 0;
+    // test
 }
