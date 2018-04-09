@@ -1,6 +1,8 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
+
 
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -14,20 +16,34 @@ void do_halt () {
     printf("HALT\n");
     exit(0);
 }
-
 void do_mov () {
     printf("MOV\n");
     //write it
 }
-
 void do_add () {
     printf("ADD\n");
     //write it
 }
-
+void do_sob () {
+    w_read(nn);
+    printf("ADD\n");
+    //write it
+}
 void do_unknown () {
     printf("UNKNOWN\n");
     //write it
+}
+
+#define NO_PARAM 0
+#define HAS_SS 1
+#define HAS_DD (1<<1)
+#define HAS_XX (1<<2)
+#define HAS_NN (1<<3)
+
+word nn;
+
+word get_nn(word w) {
+    return w & 077;
 }
 
 struct Command {
@@ -35,17 +51,21 @@ struct Command {
     word mask;
     char *name;
     void (*func)();
-
+    byte param;
 }commands[] = {
-        {0,       0177777, "halt",    do_halt}, //mask is all "1" or "0xFFFF
-        {0010000, 0170000, "mov",     do_mov},
-        {0060000, 0170000, "add",     do_add},
+        {0,       0177777, "halt",    do_halt, NO_PARAM}, //mask is all "1" or "0xFFFF
+        {0010000, 0170000, "mov",     do_mov, HAS_SS | HAS_DD},
+        {0060000, 0170000, "add",     do_add, HAS_SS | HAS_DD},
+        {0077000, 0177000, "sob",     do_sob, HAS_NN},
         {0170000, 0177777, "unknown", do_unknown}//MUST BE THE LAST
 };
 
 
 
 byte mem[64*1024];
+word reg[8];
+
+#define pc reg[7]
 
 void b_write(adr a, byte val) {
     mem[a] = val;
@@ -74,17 +94,18 @@ word w_read (adr a) {
     return w1 + w0;
 }
 
-void load_file() {
-    FILE * f = fopen ("sum.txt", "r");
+void load_file(char * filename) {
+    char* fname = filename;
+    //scanf("%ms", &fname);
+    FILE * f = fopen (fname, "r");
     if (f == NULL){
-        perror ("sum.txt");
+        perror (fname);
         exit (1);
     };
     unsigned int adress;
     unsigned int n;
     unsigned int val = 0;
     while (fscanf (f, "%x%x", &adress, &n) == 2){
-    //fscanf (f, "%x%x", &adress, &n);
         for(int i = 0; i < n; i++) {
             fscanf (f, "%x", &val);
             b_write ((adr)(adress + i), (byte)val);
@@ -100,10 +121,15 @@ void run (adr pc0) {
         pc += 2;
         for(int i = 0; i < 64*1024; i++) {
             struct Command cmd = commands[i];
-            if ((w & cmd.mask) == *(cmd.name)) {
-                cmd.func;
-                //if (i == 0) // if it is halt
-                    //exit(0);
+            if ((w & cmd.mask) == cmd.opcode) {
+                printf("%s", cmd.name);
+                if(cmd.param & HAS_NN) {
+                    nn = get_nn(w);
+                }
+                if((cmd.param) & HAS_SS) {
+                    ss = get_ss(w);
+                }
+                cmd.func();
             }
         }
         break;
@@ -140,8 +166,10 @@ void test_mem() {
     assert (w == 0x0d0c);
 }
 
-int main () {
+int main (int argc, char * argv[]) {
+    char* filename = argv[1];
     test_mem ();
+    load_file(filename);
     return 0;
     // test
 }
