@@ -3,6 +3,13 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#define NO_PARAM 0
+#define HAS_SS 1
+#define HAS_DD (1<<1) // = 2
+#define HAS_XX (1<<2) // = 3
+#define HAS_NN (1<<3) // = 4
+
+#define pc reg[7]
 
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -12,38 +19,67 @@ typedef word adr;
 #define  HI(x) (((x) >> 8) & 0xFF)
 */
 
+word nn;
+word ss;
+word dd;
+word xx;
+byte mem[64*1024];
+word reg[8];
+//////////////////////////////////
+void b_write(adr a, byte val) {
+    mem[a] = val;
+}
+byte b_read (adr a){
+    return mem[a];
+};
+void w_write(adr a, word val){
+    //val = 0x0b0a
+    //a=2
+    //mem[2] = 0x0a
+    assert (a % 2==0);
+    mem[a] = (byte)(val & 0xFF);//(byte(val)
+    //mem[3] = 0x0b
+    mem[a+1] = (byte)((val >> 8) & 0xFF);
+}
+word w_read (adr a) {
+    word w0 = 0, w1 = 0;
+    w0 = mem[a];
+    w1 = mem[a+1];
+    // printf ("\n////// \n w0 = %x w1 = %x\n//////\n", w0, w1);
+    w1 <<= 8;
+    return w1 + w0;
+}
+//////////////////////////////////
 void do_halt () {
     printf("HALT\n");
     exit(0);
 }
 void do_mov () {
+    dd = ss;
+    // check it
     printf("MOV\n");
-    //write it
 }
 void do_add () {
+    dd = ss + dd;
     printf("ADD\n");
-    //write it
 }
 void do_sob () {
     w_read(nn);
+    pc = pc - (word)(2)*nn;
     printf("ADD\n");
-    //write it
 }
 void do_unknown () {
     printf("UNKNOWN\n");
-    //write it
 }
-
-#define NO_PARAM 0
-#define HAS_SS 1
-#define HAS_DD (1<<1)
-#define HAS_XX (1<<2)
-#define HAS_NN (1<<3)
-
-word nn;
-
+///////////////////////////////////
 word get_nn(word w) {
-    return w & 077;
+    return w & 077;// returns NN of the word
+}
+word get_ss(word w) {
+    return w & 07700;// returns SS and DD of the word
+}
+word get_dd(word w) {
+    return w & 077;// returns DD of the word
 }
 
 struct Command {
@@ -59,40 +95,6 @@ struct Command {
         {0077000, 0177000, "sob",     do_sob, HAS_NN},
         {0170000, 0177777, "unknown", do_unknown}//MUST BE THE LAST
 };
-
-
-
-byte mem[64*1024];
-word reg[8];
-
-#define pc reg[7]
-
-void b_write(adr a, byte val) {
-    mem[a] = val;
-}
-
-byte b_read (adr a){
-    return mem[a];
-};
-
-void w_write(adr a, word val){
-    //val = 0x0b0a
-    //a=2
-    //mem[2] = 0x0a
-    assert (a % 2==0);
-    mem[a] = (byte)(val & 0xFF);//(byte(val)
-    //mem[3] = 0x0b
-    mem[a+1] = (byte)((val >> 8) & 0xFF);
-}
-
-word w_read (adr a) {
-    word w0 = 0, w1 = 0;
-    w0 = mem[a];
-    w1 = mem[a+1];
-   // printf ("\n////// \n w0 = %x w1 = %x\n//////\n", w0, w1);
-    w1 <<= 8;
-    return w1 + w0;
-}
 
 void load_file(char * filename) {
     char* fname = filename;
@@ -114,20 +116,23 @@ void load_file(char * filename) {
 }
 
 void run (adr pc0) {
-    adr pc = pc0;
+    pc = pc0;
     while(1) {
         word w = w_read(pc);
         printf("%06o:%06o", pc, w);
         pc += 2;
-        for(int i = 0; i < 64*1024; i++) {
+        for(int i = 0; i < (int)sizeof(commands)/ sizeof(struct Command); i++) {
             struct Command cmd = commands[i];
             if ((w & cmd.mask) == cmd.opcode) {
                 printf("%s", cmd.name);
-                if(cmd.param & HAS_NN) {
+                if((cmd.param) & HAS_NN) {
                     nn = get_nn(w);
                 }
                 if((cmd.param) & HAS_SS) {
                     ss = get_ss(w);
+                }
+                if((cmd.param) & HAS_DD) {
+                    dd = get_dd(w);
                 }
                 cmd.func();
             }
