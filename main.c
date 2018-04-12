@@ -51,22 +51,22 @@ word w_read (adr a) {
 }
 //////////////////////////////////
 void do_halt () {
-    printf("HALT\n");
+    //printf("HALT\n");
     exit(0);
 }
 void do_mov () {
     dd = ss;
     // check it
-    printf("MOV\n");
+    //printf("MOV\n");
 }
 void do_add () {
     dd = ss + dd;
-    printf("ADD\n");
+    //printf("ADD\n");
 }
 void do_sob () {
     w_read(nn);
     pc = pc - (word)(2)*nn;
-    printf("ADD\n");
+    //printf("SOB\n");
 }
 void do_unknown () {
     printf("UNKNOWN\n");
@@ -104,8 +104,8 @@ void load_file(char * filename) {
         perror (fname);
         exit (1);
     };
-    unsigned int adress;
-    unsigned int n;
+    unsigned int adress = 0;
+    unsigned int n = 0;
     unsigned int val = 0;
     while (fscanf (f, "%x%x", &adress, &n) == 2){
         for(int i = 0; i < n; i++) {
@@ -119,12 +119,12 @@ void run (adr pc0) {
     pc = pc0;
     while(1) {
         word w = w_read(pc);
-        printf("%06o:%06o", pc, w);
+        printf("%06o:%06o ", pc, w);
         pc += 2;
         for(int i = 0; i < (int)sizeof(commands)/ sizeof(struct Command); i++) {
             struct Command cmd = commands[i];
             if ((w & cmd.mask) == cmd.opcode) {
-                printf("%s", cmd.name);
+                printf("%s\n", cmd.name);
                 if((cmd.param) & HAS_NN) {
                     nn = get_nn(w);
                 }
@@ -137,7 +137,7 @@ void run (adr pc0) {
                 cmd.func();
             }
         }
-        break;
+        //break;
     }
 }
 
@@ -175,6 +175,7 @@ int main (int argc, char * argv[]) {
     char* filename = argv[1];
     test_mem ();
     load_file(filename);
+    //printf("%d\n\n", mem[512]);
+    run(512);
     return 0;
-    // test
 }
