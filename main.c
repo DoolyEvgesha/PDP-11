@@ -22,7 +22,8 @@ typedef word adr;
 word nn;
 struct mr {
     word adr;	// address
-    word val;	// value
+    word val;
+    word res;// value
     word space; // address in mem[ ] or reg[ ]
 } ss, dd;
 
@@ -64,7 +65,7 @@ void do_mov () {
     //printf("MOV\n");
 }
 void do_add ( ) {
-    dd.val = ss.val + dd.val;///////////////////FIX IT
+    dd.res = ss.val + dd.val;///////////////////FIX IT
 }
 void do_sob () {
     w_read(nn);
@@ -72,7 +73,8 @@ void do_sob () {
     //printf("SOB\n");
 }
 void do_unknown () {
-    printf("UNKNOWN\n");
+    ;
+    //printf("UNKNOWN\n");
 }
 ///////////////////////////////////
 word get_nn(word w) {
@@ -132,7 +134,9 @@ struct mr get_dd (word w) {
             res.val = mem[res.space];
             dprintf(" R%d", n);
             break;
-
+        case 6:
+            //WRITE IT
+            break;
     }
 }
 
@@ -147,7 +151,7 @@ struct Command {
         {0010000, 0170000, "mov",     do_mov, HAS_SS | HAS_DD},
         {0060000, 0170000, "add",     do_add, HAS_SS | HAS_DD},
         {0077000, 0177000, "sob",     do_sob, HAS_NN},
-        {0170000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
+        {0000000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
 };
 
 void load_file(char * filename) {
@@ -179,6 +183,7 @@ void run (adr pc0) {
             struct Command cmd = commands[i];
             if ((w & cmd.mask) == cmd.opcode) {
                 printf("%s\n", cmd.name);
+
                 if((cmd.param) & HAS_NN) {
                     nn = get_nn(w);
                 }
@@ -186,9 +191,10 @@ void run (adr pc0) {
                     ss.val = get_ss(w);
                 }
                 if((cmd.param) & HAS_DD) {
-                    dd.val = get_dd(w);
+                    dd = get_dd(w);
                 }
                 cmd.func();
+                break;
             }
         }
         //break;
