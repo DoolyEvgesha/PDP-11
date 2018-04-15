@@ -106,14 +106,33 @@ struct mr get_dd (word w) {
             res.adr = reg[n];
             res.val = mem[res.adr];
             if(!(w & 010000) || n == 7 || n == 8)
-                reg[n] =+ 2;
+                reg[n] += 2;
             else
-                reg[n] =+ 1;//it's a byte operation
+                reg[n] += 1;//it's a byte operation
 
             break;
         case 3:
-
+            res.adr = mem[reg[n]];
+            res.val = mem[res.adr];
+            reg[n] += 2;
+            dprintf(" R%d", n);
             break;
+        case 4:
+            if(!(w & 010000) || n == 7 || n == 8)
+                res.adr = reg[n] - (word)2;
+            else
+                res.adr = reg[n] - (word)1;//it's a byte operation
+            res.val = mem[res.adr];
+            dprintf(" R%d", n);
+            break;
+        case 5:
+            reg[n] -= 2;
+            res.adr = reg[n];
+            res.space = mem[res.adr];
+            res.val = mem[res.space];
+            dprintf(" R%d", n);
+            break;
+
     }
 }
 
