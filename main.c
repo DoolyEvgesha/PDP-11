@@ -20,9 +20,13 @@ typedef word adr;
 */
 
 word nn;
-word ss;
-word dd;
-word xx;
+struct mr {
+    word adr;	// address
+    word val;	// value
+    word space; // address in mem[ ] or reg[ ]
+} ss, dd;
+
+//word xx;
 byte mem[64*1024];
 word reg[8];
 //////////////////////////////////
@@ -59,9 +63,8 @@ void do_mov () {
     // check it
     //printf("MOV\n");
 }
-void do_add () {
-    dd = ss + dd;
-    //printf("ADD\n");
+void do_add ( ) {
+    dd.val = ss.val + dd.val;///////////////////FIX IT
 }
 void do_sob () {
     w_read(nn);
@@ -78,8 +81,40 @@ word get_nn(word w) {
 word get_ss(word w) {
     return w & 07700;// returns SS and DD of the word
 }
-word get_dd(word w) {
+/*word get_dd(word w) {
     return w & 077;// returns DD of the word
+}*/
+
+struct mr get_dd (word w) {
+    int n = w & 3;    // register number
+    int mode = (w >> 3) & 3;    // mode
+    struct mr res;
+    switch (mode) {
+        case 0:
+            res.adr = (word)n;
+            res.val = reg[n];
+            res.space = (word)reg;
+            dprintf(" R%d", n);
+            break;
+        case 1:
+            res.adr = reg[n];
+            res.val = mem[res.adr];
+            //res.space = res.adr;
+            dprintf(" R%d", n);
+            break;
+        case 2:
+            res.adr = reg[n];
+            res.val = mem[res.adr];
+            if(!(w & 010000) || n == 7 || n == 8)
+                reg[n] =+ 2;
+            else
+                reg[n] =+ 1;//it's a byte operation
+
+            break;
+        case 3:
+
+            break;
+    }
 }
 
 struct Command {
@@ -93,7 +128,7 @@ struct Command {
         {0010000, 0170000, "mov",     do_mov, HAS_SS | HAS_DD},
         {0060000, 0170000, "add",     do_add, HAS_SS | HAS_DD},
         {0077000, 0177000, "sob",     do_sob, HAS_NN},
-        {0170000, 0177777, "unknown", do_unknown}//MUST BE THE LAST
+        {0170000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
 };
 
 void load_file(char * filename) {
@@ -129,10 +164,10 @@ void run (adr pc0) {
                     nn = get_nn(w);
                 }
                 if((cmd.param) & HAS_SS) {
-                    ss = get_ss(w);
+                    ss.val = get_ss(w);
                 }
                 if((cmd.param) & HAS_DD) {
-                    dd = get_dd(w);
+                    dd.val = get_dd(w);
                 }
                 cmd.func();
             }
