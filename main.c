@@ -19,7 +19,10 @@ typedef word adr;
 #define  HI(x) (((x) >> 8) & 0xFF)
 */
 
+byte r;
 word nn;
+int reg_number_sob;
+
 struct mr {
     word adr;	// address
     word val;
@@ -27,7 +30,6 @@ struct mr {
     word space; // address in mem[ ] or reg[ ]
 } ss, dd;
 
-//word xx;
 byte mem[64*1024];
 word reg[8];
 //////////////////////////////////
@@ -68,10 +70,12 @@ void do_add ( ) {
     dd.res = ss.val + dd.val;///////////////////FIX IT
 }
 void do_sob () {
-    w_read(nn);
-    pc = pc - (word)(2)*nn;
-    //printf("SOB\n");
+    printf("R%d %06o", reg_number_sob, pc - 2*nn);
+    reg[reg_number_sob]--;
+    if(reg[reg_number_sob] != 0)
+        pc = pc - (word)(2)*nn;
 }
+
 void do_unknown () {
     ;
     //printf("UNKNOWN\n");
@@ -80,16 +84,13 @@ void do_unknown () {
 word get_nn(word w) {
     return w & 077;// returns NN of the word
 }
-word get_ss(word w) {
-    return w & 07700;// returns SS and DD of the word
+int get_reg_number_sob(word w) {
+    return (w>>6) & 7;
 }
-/*word get_dd(word w) {
-    return w & 077;// returns DD of the word
-}*/
 
 struct mr get_dd (word w) {
-    int n = w & 3;    // register number
-    int mode = (w >> 3) & 3;    // mode
+    int n = w & 7;    // register number
+    int mode = (w >> 3) & 7;    // mode
     struct mr res;
     switch (mode) {
         case 0:
@@ -97,26 +98,32 @@ struct mr get_dd (word w) {
             res.val = reg[n];
             res.space = (word)reg;
             //dprintf(" R%d \n", n);
-            printf("#%d, R%d\n", res.val, n);
+            printf("R%d ", n);
             break;
         case 1:
             res.adr = reg[n];
-            res.val = mem[res.adr];
+            res.val = w_read(res.adr);
             //res.space = res.adr;
             //dprintf(" R%d", n);
+            printf("(R%d) ", n);
             break;
         case 2:
             res.adr = reg[n];
-            res.val = mem[res.adr];
+            res.val = w_read(res.adr);
             if(!(w & 010000) || n == 7 || n == 8)
                 reg[n] += 2;
             else
                 reg[n] += 1;//it's a byte operation
 
+            if (n == 7)
+                printf("#%o ", res.val);
+            else
+                printf("(R%d)+ ", n);
+
             break;
         case 3:
-            res.adr = mem[reg[n]];
-            res.val = mem[res.adr];
+            res.adr = w_read(reg[n]);
+            res.val = w_read(res.adr);
             reg[n] += 2;
             //dprintf(" R%d", n);
             break;
@@ -183,21 +190,23 @@ void run (adr pc0) {
         for(int i = 0; i < (int)sizeof(commands)/ sizeof(struct Command); i++) {
             struct Command cmd = commands[i];
             if ((w & cmd.mask) == cmd.opcode) {
-                printf("%s\n", cmd.name);
-
+                printf("%s ", cmd.name);
+                if((cmd.param) & HAS_NN) {
+                    nn = get_nn(w);
+                    r = w & 000700;
+                }
+                if((cmd.param) & HAS_SS) {
+                    ss = get_dd(w>>6);
+                }
                 if((cmd.param) & HAS_DD) {
                     dd = get_dd(w);
                 }
-                if((cmd.param) & HAS_NN) {
-                    nn = get_nn(w);
-                }
-                if((cmd.param) & HAS_SS) {
-                    ss.val = get_ss(w);
-                }
+
                 cmd.func();
                 break;
             }
         }
+        printf("\n");
         //break;
     }
 }
