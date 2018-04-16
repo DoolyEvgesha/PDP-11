@@ -76,6 +76,13 @@ void do_sob () {
         pc = pc - (word)(2)*nn;
 }
 
+void do_clear() {
+    dd.res=0;
+    dd.adr=0;
+    dd.space=0;
+    dd.val=0;
+}
+
 void do_unknown () {
     ;
     //printf("UNKNOWN\n");
@@ -155,10 +162,11 @@ struct Command {
     void (*func)();
     byte param;
 }commands[] = {
-        {0,       0177777, "halt",    do_halt, NO_PARAM}, //mask is all "1" or "0xFFFF
-        {0010000, 0170000, "mov",     do_mov, HAS_SS | HAS_DD},
-        {0060000, 0170000, "add",     do_add, HAS_SS | HAS_DD},
-        {0077000, 0177000, "sob",     do_sob, HAS_NN},
+        {0,       0177777, "halt",    do_halt,  NO_PARAM}, //mask is all "1" or "0xFFFF
+        {0010000, 0170000, "mov",     do_mov,   HAS_SS | HAS_DD},
+        {0060000, 0170000, "add",     do_add,   HAS_SS | HAS_DD},
+        {0077000, 0177000, "sob",     do_sob,   HAS_NN},
+        {0077700, 0005000, "clear",   do_clear, HAS_DD},
         {0000000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
 };
 
@@ -196,7 +204,7 @@ void run (adr pc0) {
                     r = w & 000700;
                 }
                 if((cmd.param) & HAS_SS) {
-                    ss = get_dd(w>>6);//
+                    ss = get_dd(w>>6);
                 }
                 if((cmd.param) & HAS_DD) {
                     dd = get_dd(w);
