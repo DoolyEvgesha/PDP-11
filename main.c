@@ -196,7 +196,7 @@ void run (adr pc0) {
                     r = w & 000700;
                 }
                 if((cmd.param) & HAS_SS) {
-                    ss = get_dd(w>>6);
+                    ss = get_dd(w>>6);//
                 }
                 if((cmd.param) & HAS_DD) {
                     dd = get_dd(w);
