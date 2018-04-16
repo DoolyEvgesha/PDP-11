@@ -8,6 +8,7 @@
 #define HAS_DD (1<<1) // = 2
 #define HAS_XX (1<<2) // = 3
 #define HAS_NN (1<<3) // = 4
+#define HAS_R (1<<4)
 
 #define pc reg[7]
 
@@ -21,7 +22,7 @@ typedef word adr;
 
 byte r;
 word nn;
-int reg_number_sob;
+int reg_number;
 
 struct mr {
     word adr;	// address
@@ -62,17 +63,17 @@ void do_halt () {
     exit(0);
 }
 void do_mov () {
-    dd = ss;
-    // check it
-    //printf("MOV\n");
+    printf("hurah");
+    dd.val = ss.val;
+    dd.
 }
 void do_add ( ) {
     dd.res = ss.val + dd.val;///////////////////FIX IT
 }
 void do_sob () {
-    printf("R%d %06o", reg_number_sob, pc - 2*nn);
-    reg[reg_number_sob]--;
-    if(reg[reg_number_sob] != 0)
+    printf("R%d %06o", reg_number, pc - 2*nn);
+    reg[reg_number]--;
+    if(reg[reg_number] != 0)
         pc = pc - (word)(2)*nn;
 }
 
@@ -91,8 +92,19 @@ void do_unknown () {
 word get_nn(word w) {
     return w & 077;// returns NN of the word
 }
-int get_reg_number_sob(word w) {
-    return (w>>6) & 7;
+
+void dump_reg() {
+    int i;
+    printf("\n");
+    for (i = 0; i < 8; i++)
+        printf("r%d: %06o ", i, reg[i]);
+    printf("\n");
+}
+
+int get_reg_number(word w) {
+    //printf("%06o -> %03o", w, (w>>6)&07);
+    //exit(1);
+    return (w>>6) & 07;
 }
 
 struct mr get_dd (word w) {
@@ -165,7 +177,7 @@ struct Command {
         {0,       0177777, "halt",    do_halt,  NO_PARAM}, //mask is all "1" or "0xFFFF
         {0010000, 0170000, "mov",     do_mov,   HAS_SS | HAS_DD},
         {0060000, 0170000, "add",     do_add,   HAS_SS | HAS_DD},
-        {0077000, 0177000, "sob",     do_sob,   HAS_NN},
+        {0077000, 0177000, "sob",     do_sob,   HAS_NN | HAS_R},
         {0077700, 0005000, "clear",   do_clear, HAS_DD},
         {0000000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
 };
@@ -191,7 +203,10 @@ void load_file(char * filename) {
 
 void run (adr pc0) {
     pc = pc0;
+    int counter =0;
     while(1) {
+        counter ++;
+        if (counter > 20) break;
         word w = w_read(pc);
         printf("%06o:%06o ", pc, w);
         pc += 2;
@@ -209,8 +224,12 @@ void run (adr pc0) {
                 if((cmd.param) & HAS_DD) {
                     dd = get_dd(w);
                 }
+                if((cmd.param) & HAS_R) {
+                    reg_number = get_reg_number(w);
+                }
 
                 cmd.func();
+                dump_reg();
                 break;
             }
         }
