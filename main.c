@@ -96,13 +96,14 @@ struct mr get_dd (word w) {
             res.adr = (word)n;
             res.val = reg[n];
             res.space = (word)reg;
-            dprintf(" R%d", n);
+            //dprintf(" R%d \n", n);
+            printf("#%d, R%d\n", res.val, n);
             break;
         case 1:
             res.adr = reg[n];
             res.val = mem[res.adr];
             //res.space = res.adr;
-            dprintf(" R%d", n);
+            //dprintf(" R%d", n);
             break;
         case 2:
             res.adr = reg[n];
@@ -117,7 +118,7 @@ struct mr get_dd (word w) {
             res.adr = mem[reg[n]];
             res.val = mem[res.adr];
             reg[n] += 2;
-            dprintf(" R%d", n);
+            //dprintf(" R%d", n);
             break;
         case 4:
             if(!(w & 010000) || n == 7 || n == 8)
@@ -125,14 +126,14 @@ struct mr get_dd (word w) {
             else
                 res.adr = reg[n] - (word)1;//it's a byte operation
             res.val = mem[res.adr];
-            dprintf(" R%d", n);
+            //dprintf(" R%d", n);
             break;
         case 5:
             reg[n] -= 2;
             res.adr = reg[n];
             res.space = mem[res.adr];
             res.val = mem[res.space];
-            dprintf(" R%d", n);
+            //dprintf(" R%d", n);
             break;
         case 6:
             //WRITE IT
@@ -184,14 +185,14 @@ void run (adr pc0) {
             if ((w & cmd.mask) == cmd.opcode) {
                 printf("%s\n", cmd.name);
 
+                if((cmd.param) & HAS_DD) {
+                    dd = get_dd(w);
+                }
                 if((cmd.param) & HAS_NN) {
                     nn = get_nn(w);
                 }
                 if((cmd.param) & HAS_SS) {
                     ss.val = get_ss(w);
-                }
-                if((cmd.param) & HAS_DD) {
-                    dd = get_dd(w);
                 }
                 cmd.func();
                 break;
