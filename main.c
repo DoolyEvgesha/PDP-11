@@ -63,9 +63,10 @@ void do_halt () {
     exit(0);
 }
 void do_mov () {
-    printf("hurah");
-    dd.val = ss.val;
-    dd.
+    /*printf("hurah");
+    dd.adr = ss.adr;
+    dd.val = ss.val;*/
+    reg[dd.adr] = ss.val;
 }
 void do_add ( ) {
     dd.res = ss.val + dd.val;///////////////////FIX IT
@@ -165,6 +166,7 @@ struct mr get_dd (word w) {
             //WRITE IT
             break;
     }
+    return res;
 }
 
 struct Command {
@@ -205,8 +207,12 @@ void run (adr pc0) {
     pc = pc0;
     int counter =0;
     while(1) {
-        counter ++;
-        if (counter > 20) break;
+        //counter ++;/////////////////////
+        /////
+        /////
+        /////
+        /////
+        //if (counter > 20) break;//////////////
         word w = w_read(pc);
         printf("%06o:%06o ", pc, w);
         pc += 2;
@@ -214,22 +220,22 @@ void run (adr pc0) {
             struct Command cmd = commands[i];
             if ((w & cmd.mask) == cmd.opcode) {
                 printf("%s ", cmd.name);
-                if((cmd.param) & HAS_NN) {
-                    nn = get_nn(w);
-                    r = w & 000700;
+                if((cmd.param) & HAS_DD) {
+                    dd = get_dd(w);
                 }
                 if((cmd.param) & HAS_SS) {
                     ss = get_dd(w>>6);
                 }
-                if((cmd.param) & HAS_DD) {
-                    dd = get_dd(w);
+                if((cmd.param) & HAS_NN) {
+                    nn = get_nn(w);
+                    r = w & 000700;
                 }
                 if((cmd.param) & HAS_R) {
                     reg_number = get_reg_number(w);
                 }
 
                 cmd.func();
-                dump_reg();
+                //dump_reg();
                 break;
             }
         }
