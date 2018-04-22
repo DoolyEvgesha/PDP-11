@@ -77,9 +77,6 @@ void do_sob () {
 
 void do_clear() {
     reg[dd.adr] =0;
-    dd.adr=0;
-    dd.space=0;
-    dd.val=0;
 }
 
 void do_unknown () {
@@ -176,7 +173,7 @@ struct Command {
         {0010000, 0170000, "mov",     do_mov,   HAS_SS | HAS_DD},
         {0060000, 0170000, "add",     do_add,   HAS_SS | HAS_DD},
         {0077000, 0177000, "sob",     do_sob,   HAS_NN | HAS_R},
-        {0077700, 0005000, "clear",   do_clear, HAS_DD},
+        {0005000, 0077700, "clr",   do_clear, HAS_DD},
         {0000000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
 };
 
@@ -188,26 +185,22 @@ void load_file(char * filename) {
         perror (fname);
         exit (1);
     };
-    unsigned int adress = 0;
+    unsigned int address = 0;
     unsigned int n = 0;
     unsigned int val = 0;
-    while (fscanf (f, "%x%x", &adress, &n) == 2){
+    while (fscanf (f, "%x%x", &address, &n) == 2){
         for(int i = 0; i < n; i++) {
             fscanf (f, "%x", &val);
-            b_write ((adr)(adress + i), (byte)val);
+            b_write ((adr)(address + i), (byte)val);
         }
     }
 }
 
 void run (adr pc0) {
     pc = pc0;
-    int counter =0;
+    //int counter =0;
     while(1) {
         //counter ++;/////////////////////
-        /////
-        /////
-        /////
-        /////
         //if (counter > 20) break;//////////////
         word w = w_read(pc);
         printf("%06o:%06o ", pc, w);
