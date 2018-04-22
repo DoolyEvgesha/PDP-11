@@ -63,13 +63,10 @@ void do_halt () {
     exit(0);
 }
 void do_mov () {
-    /*printf("hurah");
-    dd.adr = ss.adr;
-    dd.val = ss.val;*/
     reg[dd.adr] = ss.val;
 }
-void do_add ( ) {
-    dd.res = ss.val + dd.val;///////////////////FIX IT
+void do_add () {
+    reg[dd.adr] = ss.val + dd.val;
 }
 void do_sob () {
     printf("R%d %06o", reg_number, pc - 2*nn);
@@ -79,7 +76,7 @@ void do_sob () {
 }
 
 void do_clear() {
-    dd.res=0;
+    reg[dd.adr] =0;
     dd.adr=0;
     dd.space=0;
     dd.val=0;
@@ -87,7 +84,6 @@ void do_clear() {
 
 void do_unknown () {
     ;
-    //printf("UNKNOWN\n");
 }
 ///////////////////////////////////
 word get_nn(word w) {
@@ -235,7 +231,7 @@ void run (adr pc0) {
                 }
 
                 cmd.func();
-                //dump_reg();
+                dump_reg();
                 break;
             }
         }
