@@ -171,9 +171,11 @@ struct Command {
 }commands[] = {
         {0,       0177777, "halt",    do_halt,  NO_PARAM}, //mask is all "1" or "0xFFFF
         {0010000, 0170000, "mov",     do_mov,   HAS_SS | HAS_DD},
+        {0110000, 0170000, "mov_b",   do_mov,   HAS_SS | HAS_DD},
         {0060000, 0170000, "add",     do_add,   HAS_SS | HAS_DD},
         {0077000, 0177000, "sob",     do_sob,   HAS_NN | HAS_R},
-        {0005000, 0077700, "clr",   do_clear, HAS_DD},
+        {0005000, 0077700, "clr",     do_clear, HAS_DD},
+        //{0000400,  0xFF00, "br",      do_br,    HAS_XX},
         {0000000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
 };
 
@@ -224,7 +226,7 @@ void run (adr pc0) {
                 }
 
                 cmd.func();
-                dump_reg();
+                //dump_reg();
                 break;
             }
         }
