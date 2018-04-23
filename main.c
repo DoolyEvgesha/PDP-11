@@ -15,14 +15,14 @@
 typedef unsigned char byte;
 typedef unsigned short word;
 typedef word adr;
-/*
-#define  LO(x) ((x) & 0xFF)
-#define  HI(x) (((x) >> 8) & 0xFF)
-*/
+
 
 byte r;
 word nn;
 int reg_number;
+int is_byte_cmd;
+
+byte n, z, v, c;
 
 struct mr {
     word adr;	// address
@@ -31,9 +31,19 @@ struct mr {
     word space; // address in mem[ ] or reg[ ]
 } ss, dd;
 
+typedef union s_byte{
+    char sby;
+    unsigned char uby;
+}s_byte;
+
+typedef union s_word{
+    short sws;
+    unsigned short usw;
+}s_word;
+
 byte mem[64*1024];
 word reg[8];
-//////////////////////////////////
+/////////////////////////////////
 void b_write(adr a, byte val) {
     mem[a] = val;
 }
@@ -63,6 +73,9 @@ void do_halt () {
     exit(0);
 }
 void do_mov () {
+    reg[dd.adr] = ss.val;
+}
+void do_mov_b () {
     reg[dd.adr] = ss.val;
 }
 void do_add () {
@@ -122,8 +135,17 @@ struct mr get_dd (word w) {
             break;
         case 2:
             res.adr = reg[n];
-            res.val = w_read(res.adr);
-            if(!(w & 010000) || n == 7 || n == 8)
+            if(is_byte_cmd)
+            {
+                union s_byte xx;
+                xx.uby = w_read(res.adr);
+                union s_word yy;
+                yy.usw = xx.sby;
+                res.val = yy.sws;
+            }
+            else
+                res.val = w_read(res.adr);
+            if(!is_byte_cmd || n == 7 || n == 6)
                 reg[n] += 2;
             else
                 reg[n] += 1;//it's a byte operation
@@ -141,7 +163,7 @@ struct mr get_dd (word w) {
             //dprintf(" R%d", n);
             break;
         case 4:
-            if(!(w & 010000) || n == 7 || n == 8)
+            if(!is_byte_cmd || n == 7 || n == 8)
                 res.adr = reg[n] - (word)2;
             else
                 res.adr = reg[n] - (word)1;//it's a byte operation
@@ -155,9 +177,9 @@ struct mr get_dd (word w) {
             res.val = mem[res.space];
             //dprintf(" R%d", n);
             break;
-        case 6:
-            //WRITE IT
-            break;
+        default:
+            printf("Mode %d not implemented yet!\n", mode);
+            exit(2);
     }
     return res;
 }
@@ -171,7 +193,7 @@ struct Command {
 }commands[] = {
         {0,       0177777, "halt",    do_halt,  NO_PARAM}, //mask is all "1" or "0xFFFF
         {0010000, 0170000, "mov",     do_mov,   HAS_SS | HAS_DD},
-        {0110000, 0170000, "mov_b",   do_mov,   HAS_SS | HAS_DD},
+        {0110000, 0170000, "mov_b",   do_mov_b,   HAS_SS | HAS_DD},
         {0060000, 0170000, "add",     do_add,   HAS_SS | HAS_DD},
         {0077000, 0177000, "sob",     do_sob,   HAS_NN | HAS_R},
         {0005000, 0077700, "clr",     do_clear, HAS_DD},
@@ -211,11 +233,12 @@ void run (adr pc0) {
             struct Command cmd = commands[i];
             if ((w & cmd.mask) == cmd.opcode) {
                 printf("%s ", cmd.name);
-                if((cmd.param) & HAS_DD) {
-                    dd = get_dd(w);
-                }
+                is_byte_cmd = (w >> 15) & 1;
                 if((cmd.param) & HAS_SS) {
                     ss = get_dd(w>>6);
+                }
+                if((cmd.param) & HAS_DD) {
+                    dd = get_dd(w);
                 }
                 if((cmd.param) & HAS_NN) {
                     nn = get_nn(w);
@@ -226,7 +249,7 @@ void run (adr pc0) {
                 }
 
                 cmd.func();
-                //dump_reg();
+                dump_reg();
                 break;
             }
         }
