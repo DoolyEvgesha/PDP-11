@@ -136,19 +136,12 @@ int get_reg_number(word w) {
 }
 
 int get_xx(word w){
-    printf("%o ...",w & 0377);
+    //printf("%o ...",w & 0377);
     union s_byte xx;
     xx.uby = w;
-    //union s_word yy;
-    //yy.usw = w;
-    //yy.usw = xx.sby;
-    //val = yy.sws;
-
-    //printf("%o\n",(yy.sws) & 0377);
-    printf("%o\n",xx.sby);
+    printf("%o", pc + 2*(xx.sby));
+    //printf("%o\n",xx.sby);
     return xx.sby;
-    //return yy.sws & 0377;
-    //return w & 0377;
 }
 
 struct mr get_dd (word w) {
