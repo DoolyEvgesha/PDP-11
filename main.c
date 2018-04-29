@@ -67,13 +67,13 @@ word w_read (adr a) {
 //////////////////////////////////
 void do_xx(word result) {
     if (result == 0)
-        z = 0;
-    else
         z = 1;
-    if (result < 0)
+    else
+        z = 0;
+    /*if (result < 0)
         n = 1;
     else
-        n = 0;
+        n = 0;*/
     //if (result )
 
 }
@@ -82,15 +82,15 @@ void do_halt () {
 }
 void do_mov () {
     reg[dd.adr] = ss.val;
-    //do_xx(reg[dd.adr]);
+    do_xx(reg[dd.adr]);
 }
 void do_mov_b () {
     reg[dd.adr] = ss.val;
-    //do_xx(reg[dd.adr]);
+    do_xx(reg[dd.adr]);
 }
 void do_add () {
     reg[dd.adr] = ss.val + dd.val;
-    //do_xx(reg[dd.adr]);
+    do_xx(reg[dd.adr]);
 }
 void do_sob () {
     printf("R%d %06o", reg_number, pc - 2*nn);
@@ -263,7 +263,7 @@ void run (adr pc0) {
     int counter =0;
     while(1) {
         counter ++;/////////////////////
-        if (counter > 20) break;//////////////
+        if (counter > 25) break;//////////////
         word w = w_read(pc);
         printf("%06o:%06o ", pc, w);
         pc += 2;
