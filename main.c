@@ -19,6 +19,7 @@ typedef word adr;
 
 byte r;
 word nn;
+word xx;
 int reg_number;
 int is_byte_cmd;
 
@@ -27,7 +28,7 @@ byte n, z, v, c;
 struct mr {
     word adr;	// address
     word val;
-    word res;// value
+    word res;   // value
     word space; // address in mem[ ] or reg[ ]
 } ss, dd;
 
@@ -51,12 +52,8 @@ byte b_read (adr a){
     return mem[a];
 };
 void w_write(adr a, word val){
-    //val = 0x0b0a
-    //a=2
-    //mem[2] = 0x0a
     assert (a % 2==0);
-    mem[a] = (byte)(val & 0xFF);//(byte(val)
-    //mem[3] = 0x0b
+    mem[a] = (byte)(val & 0xFF);
     mem[a+1] = (byte)((val >> 8) & 0xFF);
 }
 word w_read (adr a) {
@@ -68,24 +65,48 @@ word w_read (adr a) {
     return w1 + w0;
 }
 //////////////////////////////////
+void do_xx(word result) {
+    if (result == 0)
+        z = 0;
+    else
+        z = 1;
+    if (result < 0)
+        n = 1;
+    else
+        n = 0;
+    //if (result )
+
+}
 void do_halt () {
-    //printf("HALT\n");
     exit(0);
 }
 void do_mov () {
     reg[dd.adr] = ss.val;
+    //do_xx(reg[dd.adr]);
 }
 void do_mov_b () {
     reg[dd.adr] = ss.val;
+    //do_xx(reg[dd.adr]);
 }
 void do_add () {
     reg[dd.adr] = ss.val + dd.val;
+    //do_xx(reg[dd.adr]);
 }
 void do_sob () {
     printf("R%d %06o", reg_number, pc - 2*nn);
     reg[reg_number]--;
     if(reg[reg_number] != 0)
         pc = pc - (word)(2)*nn;
+}
+
+void do_br() {
+    pc = pc + (word)2 * xx;
+}
+
+
+void do_beq() {
+    if (z == 1)
+        do_br();
 }
 
 void do_clear() {
@@ -112,6 +133,22 @@ int get_reg_number(word w) {
     //printf("%06o -> %03o", w, (w>>6)&07);
     //exit(1);
     return (w>>6) & 07;
+}
+
+int get_xx(word w){
+    printf("%o ...",w & 0377);
+    union s_byte xx;
+    xx.uby = w;
+    //union s_word yy;
+    //yy.usw = w;
+    //yy.usw = xx.sby;
+    //val = yy.sws;
+
+    //printf("%o\n",(yy.sws) & 0377);
+    printf("%o\n",xx.sby);
+    return xx.sby;
+    //return yy.sws & 0377;
+    //return w & 0377;
 }
 
 struct mr get_dd (word w) {
@@ -193,11 +230,12 @@ struct Command {
 }commands[] = {
         {0,       0177777, "halt",    do_halt,  NO_PARAM}, //mask is all "1" or "0xFFFF
         {0010000, 0170000, "mov",     do_mov,   HAS_SS | HAS_DD},
-        {0110000, 0170000, "mov_b",   do_mov_b,   HAS_SS | HAS_DD},
+        {0110000, 0170000, "mov_b",   do_mov_b, HAS_SS | HAS_DD},
         {0060000, 0170000, "add",     do_add,   HAS_SS | HAS_DD},
         {0077000, 0177000, "sob",     do_sob,   HAS_NN | HAS_R},
         {0005000, 0077700, "clr",     do_clear, HAS_DD},
-        //{0000400,  0xFF00, "br",      do_br,    HAS_XX},
+        {0000400,  0xFF00, "br",      do_br,    HAS_XX},
+        {0001400,  0xFF00, "beq",     do_beq,   HAS_XX},
         {0000000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
 };
 
@@ -222,10 +260,10 @@ void load_file(char * filename) {
 
 void run (adr pc0) {
     pc = pc0;
-    //int counter =0;
+    int counter =0;
     while(1) {
-        //counter ++;/////////////////////
-        //if (counter > 20) break;//////////////
+        counter ++;/////////////////////
+        if (counter > 20) break;//////////////
         word w = w_read(pc);
         printf("%06o:%06o ", pc, w);
         pc += 2;
@@ -247,7 +285,9 @@ void run (adr pc0) {
                 if((cmd.param) & HAS_R) {
                     reg_number = get_reg_number(w);
                 }
-
+                if((cmd.param) & HAS_XX) {
+                    xx = get_xx(w);
+                }
                 cmd.func();
                 dump_reg();
                 break;
