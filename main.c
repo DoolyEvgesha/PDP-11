@@ -90,8 +90,9 @@ void do_c (word result) {        /////////
 void do_halt () {
     exit(0);
 }
+// mov -(pc), -(pc)
 void do_mov () {
-    reg[dd.adr] = ss.val;
+    w_write(dd.adr, ss.val);
     do_xx(reg[dd.adr]);
 }
 void do_mov_b () {
@@ -200,19 +201,23 @@ struct mr get_dd (word w) {
             printf(" R%d", n);
             break;
         case 4:
-            //printf("....%o....\n", reg[n]);
-            if(!is_byte_cmd || n == 6 || n == 7)
-                res.adr = reg[n] - (word)2;
-            else
-                res.adr = reg[n] - (word)1;//it's a byte operation
-            res.val = mem[res.adr];
+            //printf("pc=%o \n", reg[n]);
+            if(!is_byte_cmd || n == 6 || n == 7) {
+                reg[n] -= (word)2;
+                res.adr = reg[n];
+            }
+            else {
+                reg[n] -= (word)1;
+                res.adr = reg[n];//it's a byte operation
+            }
+            res.val =  w_read(res.adr);
             if (n == 7)
                 printf("-(pc) ");
             else if (n == 6)
                 printf("-(sp) ");
             else
                 printf("-(R%d)", n);
-            //printf("///%o///%o\n", res.adr, res.val);
+            //printf("res.adr = %o, res.val = %o \n", res.adr, res.val);
             break;
         case 5:
             reg[n] -= 2;
