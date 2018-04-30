@@ -92,7 +92,10 @@ void do_halt () {
 }
 // mov -(pc), -(pc)
 void do_mov () {
-    w_write(dd.adr, ss.val);
+    if (dd.space == 1)
+        reg[dd.adr] = ss.val;
+    else
+        w_write(dd.adr, ss.val);
     do_xx(reg[dd.adr]);
 }
 void do_mov_b () {
@@ -159,11 +162,14 @@ struct mr get_dd (word w) {
     int n = w & 7;    // register number
     int mode = (w >> 3) & 7;    // mode
     struct mr res;
+    if (mode == 0)
+        res.space = 1;//if it works with registers
+    else
+        res.space = 2;//if it works with mem
     switch (mode) {
         case 0:
             res.adr = (word)n;
             res.val = reg[n];
-            res.space = (word)reg;
             printf("R%d ", n);
             break;
         case 1:
