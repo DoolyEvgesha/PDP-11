@@ -12,6 +12,9 @@
 
 #define pc reg[7]
 
+#define register 1
+#define memory 2
+
 typedef unsigned char byte;
 typedef unsigned short word;
 typedef word adr;
@@ -90,13 +93,15 @@ void do_c (word result) {        /////////
 void do_halt () {
     exit(0);
 }
-// mov -(pc), -(pc)
 void do_mov () {
-    if (dd.space == 1)
+    if (dd.space == register) {
         reg[dd.adr] = ss.val;
-    else
+        do_xx(reg[dd.adr]);
+    }
+    else {
         w_write(dd.adr, ss.val);
-    do_xx(reg[dd.adr]);
+        do_xx(w_read(dd.adr));
+    }
 }
 void do_mov_b () {
     reg[dd.adr] = ss.val;
@@ -161,11 +166,11 @@ int get_xx(word w){
 struct mr get_dd (word w) {
     int n = w & 7;    // register number
     int mode = (w >> 3) & 7;    // mode
-    struct mr res;
+    struct mr res = {0, 0, 0 ,0};
     if (mode == 0)
-        res.space = 1;//if it works with registers
+        res.space = register;//if it works with registers
     else
-        res.space = 2;//if it works with mem
+        res.space = memory;//if it works with mem
     switch (mode) {
         case 0:
             res.adr = (word)n;
@@ -345,6 +350,7 @@ void test_mem() {
     assert (mem[7] == 0x0d);
     assert (w == 0x0d0c);
 }
+
 
 int main (int argc, char * argv[]) {
     char* filename = argv[1];
