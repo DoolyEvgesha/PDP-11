@@ -70,13 +70,23 @@ void do_xx(word result) {
         z = 1;
     else
         z = 0;
-    /*if (result < 0)
+}
+/////////////////////////////////////////
+/* void do_nz(word result) {     ////////
+    if (result == 0)             ////////
+        z = 1;
+    else
+        z = 0;
+    if (result < 0)
         n = 1;
     else
-        n = 0;*/
-    //if (result )
-
+        n = 0;
 }
+
+void do_c (word result) {        /////////
+    if (result & ...)            /////////
+} */                             /////////
+//////////////////////////////////////////
 void do_halt () {
     exit(0);
 }
@@ -193,11 +203,13 @@ struct mr get_dd (word w) {
             //dprintf(" R%d", n);
             break;
         case 4:
-            if(!is_byte_cmd || n == 7 || n == 8)
+            printf("....%o....\n", reg[n]);
+            if(!is_byte_cmd || n == 6 || n == 7)
                 res.adr = reg[n] - (word)2;
             else
                 res.adr = reg[n] - (word)1;//it's a byte operation
             res.val = mem[res.adr];
+            printf("///%o///\n", res.adr);
             //dprintf(" R%d", n);
             break;
         case 5:
@@ -253,10 +265,10 @@ void load_file(char * filename) {
 
 void run (adr pc0) {
     pc = pc0;
-    int counter =0;
+    //int counter =0;
     while(1) {
-        counter ++;/////////////////////
-        if (counter > 25) break;//////////////
+        //counter ++;/////////////////////
+        //if (counter > 25) break;//////////////
         word w = w_read(pc);
         printf("%06o:%06o ", pc, w);
         pc += 2;
@@ -326,6 +338,6 @@ int main (int argc, char * argv[]) {
     test_mem ();
     load_file(filename);
     //printf("%d\n\n", mem[512]);
-    run(512);
+    run(01000);//512
     return 0;
 }
