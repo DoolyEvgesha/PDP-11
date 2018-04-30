@@ -163,14 +163,11 @@ struct mr get_dd (word w) {
             res.adr = (word)n;
             res.val = reg[n];
             res.space = (word)reg;
-            //dprintf(" R%d \n", n);
             printf("R%d ", n);
             break;
         case 1:
             res.adr = reg[n];
             res.val = w_read(res.adr);
-            //res.space = res.adr;
-            //dprintf(" R%d", n);
             printf("(R%d) ", n);
             break;
         case 2:
@@ -200,17 +197,22 @@ struct mr get_dd (word w) {
             res.adr = w_read(reg[n]);
             res.val = w_read(res.adr);
             reg[n] += 2;
-            //dprintf(" R%d", n);
+            printf(" R%d", n);
             break;
         case 4:
-            printf("....%o....\n", reg[n]);
+            //printf("....%o....\n", reg[n]);
             if(!is_byte_cmd || n == 6 || n == 7)
                 res.adr = reg[n] - (word)2;
             else
                 res.adr = reg[n] - (word)1;//it's a byte operation
             res.val = mem[res.adr];
-            printf("///%o///\n", res.adr);
-            //dprintf(" R%d", n);
+            if (n == 7)
+                printf("-(pc) ");
+            else if (n == 6)
+                printf("-(sp) ");
+            else
+                printf("-(R%d)", n);
+            //printf("///%o///%o\n", res.adr, res.val);
             break;
         case 5:
             reg[n] -= 2;
