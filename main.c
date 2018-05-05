@@ -249,7 +249,6 @@ struct mr get_dd (word w) {
                 printf("-(sp) ");
             else
                 printf("-(R%d)", n);
-            //printf("res.adr = %o, res.val = %o \n", res.adr, res.val);
             break;
         case 5:
             reg[n] -= 2;
@@ -306,10 +305,10 @@ void load_file(char * filename) {
 
 void run (adr pc0) {
     pc = pc0;
-    int counter =0;
+    //int counter =0;
     while(1) {
-        counter ++;/////////////////////
-        if (counter > 10) break;//////////////
+        //counter ++;/////////////////////
+        //if (counter > 10) break;//////////////
         word w = w_read(pc);
         printf("%06o:%06o ", pc, w);
         pc += 2;
