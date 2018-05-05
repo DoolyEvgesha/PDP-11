@@ -132,6 +132,19 @@ void do_clear() {
     reg[dd.adr] =0;
 }
 
+void do_tst_b() {
+    c = 0;
+    if(dd.val == 0)
+        z = 1;
+    if(dd.val & 0100000)
+        n = 1;
+}
+
+void do_bpl(){
+    if(n == 0)
+        do_br();
+}
+
 void do_unknown () {
     ;
 }
@@ -206,10 +219,18 @@ struct mr get_dd (word w) {
 
             break;
         case 3:
-            res.adr = w_read(reg[n]);
-            res.val = w_read(res.adr);
-            reg[n] += 2;
-            printf(" R%d", n);
+            if (n == 7) {
+                res.adr = pc;
+                res.val = w_read(res.adr);
+                reg[n] += 2;
+                printf(" @#%d", res.val);
+            }
+            else {
+                res.adr = w_read(reg[n]);
+                res.val = w_read(res.adr);
+                reg[n] += 2;
+                printf(" R%d", n);
+            }
             break;
         case 4:
             //printf("pc=%o \n", reg[n]);
@@ -259,6 +280,8 @@ struct Command {
         {0005000, 0077700, "clr",     do_clear, HAS_DD},
         {0000400,  0xFF00, "br",      do_br,    HAS_XX},
         {0001400,  0xFF00, "beq",     do_beq,   HAS_XX},
+        {0105700, 0177700, "tst_b",   do_tst_b, HAS_DD},
+        {0100000,  0xFF00, "bpl",     do_bpl,   HAS_XX},
         {0000000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
 };
 
@@ -283,10 +306,10 @@ void load_file(char * filename) {
 
 void run (adr pc0) {
     pc = pc0;
-    //int counter =0;
+    int counter =0;
     while(1) {
-        //counter ++;/////////////////////
-        //if (counter > 25) break;//////////////
+        counter ++;/////////////////////
+        if (counter > 10) break;//////////////
         word w = w_read(pc);
         printf("%06o:%06o ", pc, w);
         pc += 2;
