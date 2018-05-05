@@ -19,7 +19,7 @@ typedef unsigned char byte;
 typedef unsigned short word;
 typedef word adr;
 
-
+int f_print;
 byte r;
 word nn;
 word xx;
@@ -105,6 +105,9 @@ void do_mov () {
 }
 void do_mov_b () {
     reg[dd.adr] = ss.val;
+    if (f_print == 1)
+        print_char(ss.val);
+    f_print = 0;
     do_xx(reg[dd.adr]);
 }
 void do_add () {
@@ -143,6 +146,10 @@ void do_tst_b() {
 void do_bpl(){
     if(n == 0)
         do_br();
+}
+
+void print_char(word val){
+    printf(" %c", val);
 }
 
 void do_unknown () {
@@ -223,7 +230,8 @@ struct mr get_dd (word w) {
                 res.adr = pc;
                 res.val = w_read(res.adr);
                 reg[n] += 2;
-                printf(" @#%d", res.val);
+                printf(" @#%d ", res.val);
+                f_print = 1;
             }
             else {
                 res.adr = w_read(reg[n]);
