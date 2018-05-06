@@ -104,11 +104,20 @@ void do_mov () {
     }
 }
 void do_mov_b () {
-    reg[dd.adr] = ss.val;
-    if (f_print == 1)
-        print_char(ss.val);
-    f_print = 0;
-    do_xx(reg[dd.adr]);
+    if (dd.space == register) {
+        reg[dd.adr] = ss.val;
+        if (f_print == 1)
+            print_char(ss.val);
+        f_print = 0;
+        do_xx(reg[dd.adr]);
+    }
+    else {
+        w_write(dd.adr, ss.val);
+        if (f_print == 1)
+            print_char(ss.val);
+        f_print = 0;
+        do_xx(w_read(dd.adr));
+    }
 }
 void do_add () {
     reg[dd.adr] = ss.val + dd.val;
@@ -266,15 +275,18 @@ struct mr get_dd (word w) {
             break;
         case 6:
             if(n == 7) {
-                res.adr = w_read(pc) + pc;
+                res.adr = w_read(pc) + pc + 2;
                 res.val = mem[res.adr];
-                printf("%o ", w_read(pc));
+                printf("%o ,", w_read(pc) + pc + 2);
+                printf("[%o] " , res.adr);
+                pc+=2;
             }
             else {
                 res.adr = reg[n] + w_read(pc);
                 res.val = mem[res.adr];
-                ///pc+=2;
-                printf("%d(R%d), ", w_read(pc), n);
+                printf("%o(R%d), ", w_read(pc), n);
+                printf("[%o] = %o, ", res.adr, res.val);
+                pc+=2;
             }
             break;
         default:
