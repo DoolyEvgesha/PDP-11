@@ -9,6 +9,7 @@
 #define HAS_XX (1<<2) // = 3
 #define HAS_NN (1<<3) // = 4
 #define HAS_R (1<<4)
+#define HAS_R_END (1<<5)
 
 #define pc reg[7]
 
@@ -144,6 +145,13 @@ void do_clear() {
     reg[dd.adr] =0;
 }
 
+void do_jsr() {
+    //printf("...%o...", dd.adr);
+    pc = dd.adr;
+    reg[6] -= 2;
+    reg[reg_number] = pc;
+}
+
 void do_tst_b() {
     c = 0;
     if(dd.val == 0)
@@ -155,6 +163,17 @@ void do_tst_b() {
 void do_bpl(){
     if(n == 0)
         do_br();
+}
+
+void do_rts(){
+    pc = reg[reg_number];
+    printf("pc = ...%o..", pc);
+    reg[reg_number] = w_read(pc);
+    //reg[reg_number] = w_read(reg[6]+4);
+    //reg[6] += 2;
+    printf("..R[%o] = %o, mem[sp] = %o, reg[6] = %o ", reg_number,reg[reg_number], w_read(reg[6]+4), reg[6]+4);
+    printf("pc = %o..", pc);
+    //reg[6] += 2;
 }
 
 void print_char(word val){
@@ -313,6 +332,8 @@ struct Command {
         {0001400,  0xFF00, "beq",     do_beq,   HAS_XX},
         {0105700, 0177700, "tst_b",   do_tst_b, HAS_DD},
         {0100000,  0xFF00, "bpl",     do_bpl,   HAS_XX},
+        {0004000, 0177000, "jsr",     do_jsr,   HAS_DD | HAS_R},
+        {0000200, 0177770, "rts",     do_rts,   HAS_R_END},
         {0000000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
 };
 
@@ -361,6 +382,9 @@ void run (adr pc0) {
                 }
                 if((cmd.param) & HAS_R) {
                     reg_number = get_reg_number(w);
+                }
+                if((cmd.param) & HAS_R_END) {
+                    reg_number = get_reg_number(w<<6);
                 }
                 if((cmd.param) & HAS_XX) {
                     xx = get_xx(w);
