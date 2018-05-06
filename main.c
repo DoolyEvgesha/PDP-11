@@ -230,7 +230,7 @@ struct mr get_dd (word w) {
                 res.adr = pc;
                 res.val = w_read(res.adr);
                 reg[n] += 2;
-                printf(" @#%d ", res.val);
+                printf(" @#%o ", res.val);
                 f_print = 1;
             }
             else {
@@ -263,7 +263,19 @@ struct mr get_dd (word w) {
             res.adr = reg[n];
             res.space = mem[res.adr];
             res.val = mem[res.space];
-            //dprintf(" R%d", n);
+            break;
+        case 6:
+            if(n == 7) {
+                res.adr = w_read(pc) + pc;
+                res.val = mem[res.adr];
+                printf("%o ", w_read(pc));
+            }
+            else {
+                res.adr = reg[n] + w_read(pc);
+                res.val = mem[res.adr];
+                ///pc+=2;
+                printf("%d(R%d), ", w_read(pc), n);
+            }
             break;
         default:
             printf("Mode %d not implemented yet!\n", mode);
