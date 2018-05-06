@@ -12,6 +12,7 @@
 #define HAS_R_END (1<<5)
 
 #define pc reg[7]
+#define sp reg[6]
 
 #define register 1
 #define memory 2
@@ -147,9 +148,14 @@ void do_clear() {
 
 void do_jsr() {
     //printf("...%o...", dd.adr);
-    pc = dd.adr;
+   /* pc = dd.adr;
     reg[6] -= 2;
     reg[reg_number] = pc;
+*/
+   w_write(sp, reg[reg_number]);
+   sp -= 2;
+   reg[reg_number] = pc;
+   pc = dd.adr;
 }
 
 void do_tst_b() {
@@ -167,13 +173,14 @@ void do_bpl(){
 
 void do_rts(){
     pc = reg[reg_number];
-    printf("pc = ...%o..", pc);
-    reg[reg_number] = w_read(pc);
+    sp += 2;
+    pc = w_read(sp);
+    //reg[reg_number] = w_read(pc -(pc - sp));
+    //printf("pc = %o, sp = %o, pc - sp = %o", pc, sp, pc - sp - 2);
     //reg[reg_number] = w_read(reg[6]+4);
-    //reg[6] += 2;
-    printf("..R[%o] = %o, mem[sp] = %o, reg[6] = %o ", reg_number,reg[reg_number], w_read(reg[6]+4), reg[6]+4);
-    printf("pc = %o..", pc);
-    //reg[6] += 2;
+    //printf("..R[%o] = %o, mem[sp] = %o, reg[6] = %o ", reg_number,reg[reg_number], w_read(reg[6]+4), reg[6]+4);
+    //printf("pc = %o..", pc);
+    //sp += 2;
 }
 
 void print_char(word val){
