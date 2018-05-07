@@ -24,7 +24,8 @@ typedef word adr;
 int f_print;
 byte r;
 word nn;
-word xx;
+//word xx;
+//unsigned int xx;
 int reg_number;
 int is_byte_cmd;
 
@@ -46,6 +47,7 @@ typedef union s_word{
     short sws;
     unsigned short usw;
 }s_word;
+s_word xx;
 
 byte mem[64*1024];
 word reg[8];
@@ -133,7 +135,7 @@ void do_sob () {
 }
 
 void do_br() {
-    pc = pc + (word)2 * xx;
+    pc = pc + (word)2 * xx.sws;
 }
 
 
@@ -156,6 +158,16 @@ void do_jsr() {
    sp -= 2;
    reg[reg_number] = pc;
    pc = dd.adr;
+}
+
+void do_tst(){
+    if (dd.val < 0)
+        n = 1;
+    if (dd.val == 0)
+        z = 0;
+    v = 0;
+    c = 0;
+
 }
 
 void do_tst_b() {
@@ -181,6 +193,14 @@ void do_rts(){
     //printf("..R[%o] = %o, mem[sp] = %o, reg[6] = %o ", reg_number,reg[reg_number], w_read(reg[6]+4), reg[6]+4);
     //printf("pc = %o..", pc);
     //sp += 2;
+}
+
+void do_dec(){
+    dd.val -= dd.val;
+    /*if(dd.val == 0)
+        z = 1;
+    else
+        z = 0;*/
 }
 
 void print_char(word val){
@@ -338,9 +358,11 @@ struct Command {
         {0000400,  0xFF00, "br",      do_br,    HAS_XX},
         {0001400,  0xFF00, "beq",     do_beq,   HAS_XX},
         {0105700, 0177700, "tst_b",   do_tst_b, HAS_DD},
+        {0005700, 0177700, "tst",     do_tst,   HAS_DD},
         {0100000,  0xFF00, "bpl",     do_bpl,   HAS_XX},
         {0004000, 0177000, "jsr",     do_jsr,   HAS_DD | HAS_R},
         {0000200, 0177770, "rts",     do_rts,   HAS_R_END},
+        {0005300, 0177700, "dec",     do_dec,   HAS_DD},
         {0000000, 0000000, "unknown", do_unknown}//MUST BE THE LAST
 };
 
@@ -365,10 +387,10 @@ void load_file(char * filename) {
 
 void run (adr pc0) {
     pc = pc0;
-    //int counter =0;
+    int counter =0;
     while(1) {
-        //counter ++;/////////////////////
-        //if (counter > 10) break;//////////////
+        counter ++;/////////////////////
+        if (counter > 30) break;//////////////
         word w = w_read(pc);
         printf("%06o:%06o ", pc, w);
         pc += 2;
@@ -394,7 +416,9 @@ void run (adr pc0) {
                     reg_number = get_reg_number(w<<6);
                 }
                 if((cmd.param) & HAS_XX) {
-                    xx = get_xx(w);
+
+                    xx.usw = get_xx(w);
+                    //printf("..xx = %d, xx * 2 = %d..", xx, xx*2);
                 }
                 cmd.func();
                 dump_reg();
